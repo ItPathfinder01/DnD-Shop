@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -11,11 +12,53 @@ from schemas import InventoryItemCreate, InventoryItemResponse
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
 
-@router.get("", response_model=List[InventoryItemResponse])
-def get_inventory(user: User = Depends(get_current_user)):
+@router.get("")
+def get_inventory(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if not user.character:
         raise HTTPException(status_code=404, detail="Персонаж не создан")
-    return user.character.inventory
+
+    result = []
+    for inv in user.character.inventory:
+        itype = inv.item_type.value if hasattr(inv.item_type, "value") else inv.item_type
+        entry = {
+            "id": inv.id,
+            "item_type": itype,
+            "shop_item_id": inv.shop_item_id,
+            "custom_name": inv.custom_name,
+            "quantity": inv.quantity,
+            "title": inv.custom_name or "",
+            "image_url": "",
+            "rarity": None,
+            "type": None,
+            "category": None,
+            "damage": None,
+            "armor_class": None,
+        }
+        if itype == "magic_item" and inv.shop_item_id:
+            row = db.execute(
+                text("SELECT title, title_en, type, rarity_tag, image_url FROM items WHERE id=:id"),
+                {"id": inv.shop_item_id}
+            ).fetchone()
+            if row:
+                entry.update({
+                    "title": row.title, "title_en": row.title_en,
+                    "type": row.type, "rarity": row.rarity_tag,
+                    "image_url": row.image_url or "",
+                })
+        elif itype == "equipment" and inv.shop_item_id:
+            row = db.execute(
+                text("SELECT title, title_en, category, type, damage, armor_class, image_url FROM equipment WHERE id=:id"),
+                {"id": inv.shop_item_id}
+            ).fetchone()
+            if row:
+                entry.update({
+                    "title": row.title, "title_en": row.title_en,
+                    "category": row.category, "type": row.type,
+                    "damage": row.damage or "", "armor_class": row.armor_class or "",
+                    "image_url": row.image_url or "",
+                })
+        result.append(entry)
+    return result
 
 
 @router.post("", response_model=InventoryItemResponse, status_code=201)

@@ -142,7 +142,7 @@ def list_magic_items(
         items.append({
             "id": r.id, "title": r.title, "title_en": r.title_en,
             "type": r.type, "rarity": r.rarity_tag,
-            "image_url": r.image_url, "description": (r.description or "")[:200],
+            "image_url": r.image_url, "description": r.description or "",
             "price_copper": price_copper,
             "price_display": copper_display(price_copper),
         })
@@ -199,7 +199,7 @@ def list_equipment(
             "price": r.price or "", "damage": r.damage or "",
             "armor_class": r.armor_class or "",
             "image_url": r.image_url or "",
-            "description": (r.description or "")[:200],
+            "description": r.description or "",
             "price_copper": price_copper,
             "price_display": r.price or "—",
         })
