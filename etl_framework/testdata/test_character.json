@@ -1,0 +1,11 @@
+{
+  "name": "Test Character",
+  "race": "Human",
+  "age": 25,
+  "description": "Automated test character",
+  "platinum": 0,
+  "gold": 10000,
+  "electrum": 0,
+  "silver": 0,
+  "copper": 0
+}
