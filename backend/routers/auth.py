@@ -33,7 +33,3 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
     return Token(access_token=create_access_token(user.id))
 
 
-@router.get("/me", response_model=UserResponse)
-def me(db: Session = Depends(get_db), credentials=None):
-    # Этот эндпоинт используется через dependencies в main
-    pass
