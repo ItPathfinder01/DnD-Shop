@@ -13,7 +13,7 @@ def test_api_is_alive():
 def test_register_new_user():
     email = f"smoke_{uuid.uuid4().hex[:8]}@dndtest.com"  # generate a unique email so this test never conflicts with previous runs
     r = register(email, "testpassword123")  # send POST /auth/register with the new credentials
-    assert r.status_code == 200  # API should return 200 and the new user object
+    assert r.status_code == 201  # API should return 200 and the new user object
     data = r.json()  # parse the response body from JSON into a Python dict
     assert "id" in data  # the response must contain an "id" field (the user's database ID)
     assert data["email"] == email  # the returned email must match what we sent

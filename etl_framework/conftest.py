@@ -28,7 +28,7 @@ def user_credentials():
 @pytest.fixture(scope="session")  # also session-scoped — the token is reused by all tests that need auth
 def auth_token(user_credentials):  # depends on user_credentials, so pytest injects it automatically
     r = register(user_credentials["email"], user_credentials["password"])  # call POST /auth/register
-    assert r.status_code == 200, f"Регистрация не удалась: {r.text}"  # abort the entire session if registration fails
+    assert r.status_code == 201, f"Регистрация не удалась: {r.text}"  # abort the entire session if registration fails
     r = login(user_credentials["email"], user_credentials["password"])  # call POST /auth/login
     assert r.status_code == 200, f"Логин не удался: {r.text}"  # abort if login fails
     return r.json()["access_token"]  # extract the JWT token string from the response and return it
