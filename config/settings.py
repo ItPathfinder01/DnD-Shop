@@ -15,3 +15,6 @@ API_TIMEOUT = int(os.getenv("API_TIMEOUT", "10"))
 # os.path.join(..., "..", "testdata") goes one level up and into "testdata/"
 # This way the path works correctly regardless of where pytest is launched from.
 TESTDATA_DIR = os.path.join(os.path.dirname(__file__), "..", "testdata")
+
+SUPERADMIN_EMAIL = os.getenv("SUPERADMIN_EMAIL", "")
+SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD", "")
