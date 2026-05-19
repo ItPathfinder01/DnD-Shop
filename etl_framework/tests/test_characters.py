@@ -1,8 +1,4 @@
 import pytest
-from utils.api_client import (
-    get_my_character, update_character, get_characters,
-    transfer_money, create_character,
-)
 
 
 @pytest.mark.smoke
@@ -13,8 +9,8 @@ def test_character_was_created(character):
 
 
 @pytest.mark.smoke
-def test_get_my_character(auth_token, character):
-    r = get_my_character(auth_token)
+def test_get_my_character(api_client, character):
+    r = api_client.characters.get_my_character()
     assert r.status_code == 200
     assert r.json()["id"] == character["id"]
 
@@ -33,32 +29,32 @@ def test_character_initial_currency(character):
 
 
 @pytest.mark.regression
-def test_update_character_description(auth_token):
+def test_update_character_description(api_client):
     new_desc = "Updated by automated test"
-    r = update_character(auth_token, {"description": new_desc})
+    r = api_client.characters.update_character({"description": new_desc})
     assert r.status_code == 200
     assert r.json()["description"] == new_desc
 
 
 @pytest.mark.regression
-def test_get_all_characters_returns_list(auth_token, second_character):
-    r = get_characters(auth_token)
+def test_get_all_characters_returns_list(api_client, second_character):
+    r = api_client.characters.get_characters()
     assert r.status_code == 200
     assert isinstance(r.json(), list)
 
 
 @pytest.mark.regression
-def test_second_character_not_in_own_list(auth_token, character, second_character):
+def test_second_character_not_in_own_list(api_client, character, second_character):
     """GET /characters возвращает всех, кроме персонажа текущего пользователя."""
-    r = get_characters(auth_token)
+    r = api_client.characters.get_characters()
     own_id = character["id"]
     ids = [c["id"] for c in r.json()]
     assert own_id not in ids
 
 
 @pytest.mark.regression
-def test_cannot_create_second_character(auth_token):
-    r = create_character(auth_token, {
+def test_cannot_create_second_character(api_client):
+    r = api_client.characters.create_character({
         "name": f"Duplicate {id(object())}",
         "race": "Elf",
         "age": 100,
@@ -68,9 +64,9 @@ def test_cannot_create_second_character(auth_token):
 
 
 @pytest.mark.regression
-def test_transfer_gold_to_second_character(auth_token, character, second_character):
+def test_transfer_gold_to_second_character(api_client, character, second_character):
     gold_before = character["gold"]
-    r = transfer_money(auth_token, {
+    r = api_client.characters.transfer_money({
         "to_character_id": second_character["id"],
         "platinum": 0,
         "gold": 1,
@@ -80,5 +76,5 @@ def test_transfer_gold_to_second_character(auth_token, character, second_charact
     })
     assert r.status_code == 200
 
-    r2 = get_my_character(auth_token)
+    r2 = api_client.characters.get_my_character()
     assert r2.json()["gold"] == gold_before - 1
