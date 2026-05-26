@@ -4,7 +4,12 @@ version = "0.1.0"
 requires-python = ">=3.11"
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "requests"]
+dev = [
+    "pytest>=9.0.0",
+    "pytest-cov>=6.0.0",
+    "allure-pytest>=2.16.0",
+    "requests>=2.34.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -5,13 +5,13 @@ from api.auth import AuthClient
 
 
 @pytest.fixture
-def smoke_user(superadmin_token):
+def smoke_user(admin_token):
     email = f"smoke_{uuid.uuid4().hex[:8]}@dndtest.com"
     r = AuthClient().register(email, "testpassword123")
     assert r.status_code == 201, f"Регистрация не удалась: {r.text}"
     data = r.json()
     yield email, data
-    ApiClient(token=superadmin_token).admin.delete_user(data["id"])
+    ApiClient(token=admin_token).admin.delete_user(data["id"])
 
 
 @pytest.mark.smoke
