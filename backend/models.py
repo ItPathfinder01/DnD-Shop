@@ -88,7 +88,7 @@ class Transfer(Base):
     copper = Column(Integer, default=0)
 
     # Для предметов
-    inventory_item_id = Column(Integer, ForeignKey("inventory_items.id"), nullable=True)
+    inventory_item_id = Column(Integer, ForeignKey("inventory_items.id", ondelete="SET NULL"), nullable=True)
     quantity = Column(Integer, default=1)
 
     created_at = Column(DateTime, default=datetime.utcnow)

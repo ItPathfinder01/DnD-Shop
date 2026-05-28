@@ -1,3 +1,4 @@
+import subprocess
 import pytest
 
 pytest_plugins = [
@@ -10,3 +11,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "smoke: быстрые проверки что API отвечает")
     config.addinivalue_line("markers", "regression: детальные проверки бизнес-логики")
     config.addinivalue_line("markers", "integration: тесты с реальным API DnD Shop")
+
+
+def pytest_sessionfinish(session, exitstatus):
+    subprocess.Popen(["allure", "serve", "allure-results"])
