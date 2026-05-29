@@ -121,8 +121,8 @@ def test_search_magic_items(api_client):
 @allure.severity(allure.severity_level.NORMAL)
 @pytest.mark.regression
 def test_pagination_limits_results(api_client):
-    with allure.step(f"GET {API_BASE_URL}/shop/magic-items?per_page=5"):
-        r = api_client.shop.get_shop_magic_items(params={"per_page": 5})
+    with allure.step(f"GET {API_BASE_URL}/shop/magic-items?limit=5"):
+        r = api_client.shop.get_shop_magic_items(params={"limit": 5})
     assert r.status_code == 200
     with allure.step("Проверяем что сервер вернул не более 5 предметов"):
         assert len(extract_items(r.json())) <= 5
