@@ -54,6 +54,15 @@ export default function Character() {
     }
   };
 
+  const exchangeCoins = async (fromCoin, toCoin, amount) => {
+    const { data } = await api.post("/characters/me/exchange", {
+      from_coin: fromCoin,
+      to_coin: toCoin,
+      amount,
+    });
+    setChar(data);
+  };
+
   if (!char) return <div className="page"><p>Загрузка...</p></div>;
 
   return (
@@ -95,7 +104,7 @@ export default function Character() {
           ))}
         </div>
 
-        <CoinConverter />
+        <CoinConverter onExchange={exchangeCoins} />
       </div>
 
       {/* Правая колонка */}

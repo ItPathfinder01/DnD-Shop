@@ -258,6 +258,7 @@ select option { background: #0a0618; }
   gap: 24px;
   align-items: stretch;
   padding-top: 30px;
+  height: calc(100vh - 54px);
 }
 
 .char-left, .char-right {
@@ -287,7 +288,7 @@ select option { background: #0a0618; }
   opacity: 0.6;
 }
 
-.char-left { display: flex; flex-direction: column; gap: 18px; }
+.char-left { display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
 
 /* Аватар */
 .userpic {
@@ -319,6 +320,12 @@ select option { background: #0a0618; }
 }
 
 /* Монеты */
+.money-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 .money-block h4 {
   color: var(--gold);
   font-size: 13px;
@@ -332,13 +339,12 @@ select option { background: #0a0618; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
   font-size: 14px;
 }
 .coin-row input { width: 80px; margin: 0; text-align: right; padding: 4px 6px; font-size: 14px; }
 
 /* Конвертер */
-.converter { font-size: 14px; margin-top: auto; }
+.converter { font-size: 14px; }
 .converter h4 {
   color: var(--gold);
   font-size: 12px;
@@ -362,7 +368,7 @@ select option { background: #0a0618; }
 }
 
 /* Правая колонка */
-.char-right { display: flex; flex-direction: column; gap: 18px; }
+.char-right { display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
 
 .char-header { display: flex; align-items: center; gap: 12px; }
 .char-header h2 {

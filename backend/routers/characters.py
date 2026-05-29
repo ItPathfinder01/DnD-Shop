@@ -9,7 +9,7 @@ from PIL import Image
 from database import get_db
 from dependencies import get_current_user
 from models import User, Character
-from schemas import CharacterCreate, CharacterUpdate, CharacterResponse, CharacterShort, MoneyTransfer, ItemTransfer
+from schemas import CharacterCreate, CharacterUpdate, CharacterResponse, CharacterShort, MoneyTransfer, ItemTransfer, CoinExchange
 from models import Transfer, TransferTypeEnum, InventoryItem
 
 UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
@@ -216,3 +216,35 @@ def transfer_item(data: ItemTransfer, db: Session = Depends(get_db), user: User 
     db.add(transfer)
     db.commit()
     return {"detail": "Предмет передан"}
+
+
+COIN_RATES = {"platinum": 1000, "gold": 100, "electrum": 50, "silver": 10, "copper": 1}
+
+
+@router.post("/me/exchange", response_model=CharacterResponse)
+def exchange_coins(data: CoinExchange, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    char = user.character
+    if not char:
+        raise HTTPException(status_code=404, detail="Персонаж не создан")
+    if data.from_coin not in COIN_RATES or data.to_coin not in COIN_RATES:
+        raise HTTPException(status_code=400, detail="Неверный тип монеты")
+    if data.from_coin == data.to_coin:
+        raise HTTPException(status_code=400, detail="Нельзя обменять монету на саму себя")
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Количество должно быть положительным")
+
+    available = getattr(char, data.from_coin)
+    if available < data.amount:
+        raise HTTPException(status_code=400, detail=f"Недостаточно монет. Доступно: {available}")
+
+    copper_value = data.amount * COIN_RATES[data.from_coin]
+    to_rate = COIN_RATES[data.to_coin]
+    if copper_value % to_rate != 0:
+        raise HTTPException(status_code=400, detail="Обмен невозможен без потери монет")
+
+    to_amount = copper_value // to_rate
+    setattr(char, data.from_coin, available - data.amount)
+    setattr(char, data.to_coin, getattr(char, data.to_coin) + to_amount)
+    db.commit()
+    db.refresh(char)
+    return char

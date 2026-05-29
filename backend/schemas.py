@@ -148,6 +148,12 @@ class ItemTransfer(BaseModel):
     quantity: int = 1
 
 
+class CoinExchange(BaseModel):
+    from_coin: str
+    to_coin: str
+    amount: int
+
+
 # --- Admin ---
 
 class AdminUserResponse(BaseModel):
