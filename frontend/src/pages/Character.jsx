@@ -126,12 +126,21 @@ export default function Character() {
           )}
         </div>
 
-        <div className="char-field">
-          <label>Раса</label>
-          {editing
-            ? <input value={form.race} onChange={(e) => set("race", e.target.value)} />
-            : <span>{char.race}</span>
-          }
+        <div className="char-fields-row">
+          <div className="char-field">
+            <label>Раса</label>
+            {editing
+              ? <input value={form.race} onChange={(e) => set("race", e.target.value)} />
+              : <span>{char.race}</span>
+            }
+          </div>
+          <div className="char-field">
+            <label>Класс</label>
+            {editing
+              ? <input value={form.character_class ?? ""} onChange={(e) => set("character_class", e.target.value)} />
+              : <span>{char.character_class || <em>Не указан</em>}</span>
+            }
+          </div>
         </div>
 
         <div className="char-field">

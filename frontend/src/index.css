@@ -379,6 +379,8 @@ select option { background: #0a0618; }
 }
 .char-header input { font-size: 20px; margin: 0; font-family: 'Cinzel', serif; }
 
+.char-fields-row { display: flex; gap: 16px; }
+.char-fields-row .char-field { flex: 1; }
 .char-field { display: flex; flex-direction: column; gap: 5px; }
 .char-field label {
   color: var(--gold-dim);

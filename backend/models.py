@@ -28,6 +28,7 @@ class Character(Base):
     name = Column(String(100), unique=True, nullable=False)
     name_lower = Column(String(100), unique=True, nullable=False)  # для проверки без учёта регистра
     race = Column(String(100), nullable=False)
+    character_class = Column(String(100), default="", nullable=False)
     age = Column(Integer, nullable=False)
     description = Column(Text, default="")
     userpic = Column(String(500), default="")

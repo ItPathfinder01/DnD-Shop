@@ -72,7 +72,7 @@ def update_character(data: CharacterUpdate, db: Session = Depends(get_db), user:
         char.name = data.name.strip()
         char.name_lower = data.name.strip().lower()
 
-    for field in ("race", "age", "description", "platinum", "gold", "electrum", "silver", "copper"):
+    for field in ("race", "character_class", "age", "description", "platinum", "gold", "electrum", "silver", "copper"):
         val = getattr(data, field)
         if val is not None:
             setattr(char, field, val)

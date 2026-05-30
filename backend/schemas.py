@@ -40,6 +40,7 @@ class UserResponse(BaseModel):
 class CharacterCreate(BaseModel):
     name: str
     race: str
+    character_class: Optional[str] = ""
     age: int
     description: Optional[str] = ""
     platinum: Optional[int] = 0
@@ -69,6 +70,7 @@ class CharacterCreate(BaseModel):
 class CharacterUpdate(BaseModel):
     name: Optional[str] = None
     race: Optional[str] = None
+    character_class: Optional[str] = None
     age: Optional[int] = None
     description: Optional[str] = None
     platinum: Optional[int] = None
@@ -82,6 +84,7 @@ class CharacterResponse(BaseModel):
     id: int
     name: str
     race: str
+    character_class: str
     age: int
     description: str
     userpic: str
