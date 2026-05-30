@@ -6,6 +6,7 @@ from api.auth import AuthClient
 from config.settings import API_BASE_URL
 
 
+
 @pytest.fixture
 def smoke_user(admin_token):
     email = f"smoke_{uuid.uuid4().hex[:8]}@dndtest.com"
