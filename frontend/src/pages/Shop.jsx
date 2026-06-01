@@ -3,6 +3,94 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { priceInGold, RarityBadge, PLACEHOLDER_SVGS, getPlaceholderKind } from "../utils/itemUtils";
 
+// ── Roulette Panel ────────────────────────────────────────────────────────────
+function RoulettePanel({ onWalletChange }) {
+  const [status, setStatus]   = useState(null);
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult]   = useState(null);
+  const [msg, setMsg]         = useState("");
+
+  const fetchStatus = () =>
+    api.get("/roulette/status").then(r => setStatus(r.data)).catch(() => {});
+
+  useEffect(() => { fetchStatus(); }, []);
+
+  async function doSpin() {
+    setMsg(""); setResult(null); setSpinning(true);
+    await new Promise(r => setTimeout(r, 1400));
+    try {
+      const { data } = await api.post("/roulette/spin");
+      setResult(data);
+      setStatus(s => ({ ...s, can_spin: false, spun_today: true, unclaimed_item: data }));
+      onWalletChange();
+    } catch (e) {
+      setMsg(e.response?.data?.detail || "Ошибка");
+    }
+    setSpinning(false);
+  }
+
+  async function doClaim(spinId) {
+    try {
+      await api.post(`/roulette/claim?spin_id=${spinId}`);
+      setMsg("Предмет добавлен в инвентарь!");
+      setResult(null);
+      fetchStatus();
+    } catch (e) {
+      setMsg(e.response?.data?.detail || "Ошибка");
+    }
+  }
+
+  const pending = result || status?.unclaimed_item;
+  const pendingKind = pending ? getPlaceholderKind(pending) : "default";
+  const imgOk = pending?.image_url;
+
+  return (
+    <div className="roulette-panel">
+      <h3 className="roulette-title">🎰 Рулетка Удачи</h3>
+      <div className="roulette-cost">500 зм · 1 раз в день</div>
+
+      {spinning && (
+        <div className="roulette-spin-anim">
+          <div className="roulette-slot spinning">
+            {PLACEHOLDER_SVGS.magic}
+          </div>
+          <div className="roulette-spin-text">Судьба решает...</div>
+        </div>
+      )}
+
+      {!spinning && pending && (
+        <div className="roulette-result">
+          <div className="roulette-item-img">
+            {imgOk
+              ? <img src={pending.image_url} alt={pending.title} />
+              : <div className="roulette-item-placeholder">{PLACEHOLDER_SVGS[pendingKind]}</div>
+            }
+          </div>
+          <div className="roulette-item-name">{pending.title}</div>
+          {pending.rarity && <RarityBadge rarity={pending.rarity} />}
+          {pending.category && <span className="item-tag">{pending.category}</span>}
+          <button className="btn-roulette-claim" onClick={() => doClaim(pending.spin_id)}>
+            Забрать в инвентарь
+          </button>
+        </div>
+      )}
+
+      {!spinning && !pending && status && (
+        <button
+          className="btn-roulette-spin"
+          disabled={!status.can_spin}
+          onClick={doSpin}
+          title={!status.can_spin && status.spun_today ? `Следующий спин: ${new Date(status.next_reset).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })} UTC` : ""}
+        >
+          {status.can_spin ? "🎲 Крутить" : status.spun_today ? "Уже крутили сегодня" : "Сначала заберите выигрыш"}
+        </button>
+      )}
+
+      {msg && <div className={`roulette-msg ${msg.includes("инвентарь") ? "success" : "error"}`}>{msg}</div>}
+    </div>
+  );
+}
+
 // ── Dice SVG ──────────────────────────────────────────────────────────────────
 function D20Icon({ value, rolling }) {
   return (
@@ -246,7 +334,7 @@ export default function Shop() {
       </div>
 
       <div className="shop-layout">
-        <div className="shop-items-area">
+        <div className="shop-items-area" style={{gridColumn: "1"}}>
           {items.length === 0 && !loading && <div className="shop-empty">Ничего не найдено</div>}
           <div className="shop-grid">
             {items.map(item => (
@@ -265,6 +353,7 @@ export default function Shop() {
           )}
         </div>
 
+        <div className="shop-right-col">
         <div className="shop-cart">
           <h3>Корзина {cartCount > 0 && <span className="cart-count">{cartCount}</span>}</h3>
           {cart.length === 0 ? (
@@ -293,6 +382,13 @@ export default function Shop() {
               {purchaseMsg}
             </div>
           )}
+        </div>
+        <RoulettePanel onWalletChange={() => {
+          api.get("/characters/me").then(r => {
+            const c = r.data;
+            setWallet(c.platinum * 1000 + c.gold * 100 + c.electrum * 50 + c.silver * 10 + c.copper);
+          }).catch(() => {});
+        }} />
         </div>
       </div>
 

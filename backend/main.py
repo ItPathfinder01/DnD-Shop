@@ -7,7 +7,7 @@ from database import engine
 from models import Base
 from dependencies import get_current_user
 from schemas import UserResponse
-from routers import auth, characters, inventory, admin, shop
+from routers import auth, characters, inventory, admin, shop, roulette
 
 Base.metadata.create_all(bind=engine)
 
@@ -30,6 +30,7 @@ app.include_router(characters.router)
 app.include_router(inventory.router)
 app.include_router(admin.router)
 app.include_router(shop.router)
+app.include_router(roulette.router)
 
 
 @app.get("/auth/me", response_model=UserResponse, tags=["auth"])

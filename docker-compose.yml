@@ -39,6 +39,19 @@ services:
       - backend
     restart: unless-stopped
 
+  qa_agent:
+    build: ./qa_agent
+    container_name: dnd_shop_qa_agent
+    ports:
+      - "8001:8001"
+    environment:
+      JIRA_BASE_URL: ${JIRA_BASE_URL}
+      JIRA_EMAIL: ${JIRA_EMAIL}
+      JIRA_API_TOKEN: ${JIRA_API_TOKEN}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-}
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     external: true

@@ -46,6 +46,7 @@ class Character(Base):
     inventory = relationship("InventoryItem", back_populates="character", cascade="all, delete-orphan")
     transfers_sent = relationship("Transfer", foreign_keys="Transfer.from_character_id", back_populates="from_character")
     transfers_received = relationship("Transfer", foreign_keys="Transfer.to_character_id", back_populates="to_character")
+    roulette_history = relationship("RouletteHistory", back_populates="character", cascade="all, delete-orphan")
 
 
 class ItemTypeEnum(str, enum.Enum):
@@ -71,6 +72,20 @@ class InventoryItem(Base):
 class TransferTypeEnum(str, enum.Enum):
     money = "money"
     item = "item"
+
+
+class RouletteHistory(Base):
+    __tablename__ = "roulette_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    character_id = Column(Integer, ForeignKey("characters.id"), nullable=False)
+    item_id = Column(Integer, nullable=False)
+    item_type = Column(String(20), nullable=False)  # "magic_item" | "equipment"
+    spun_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    claimed_at = Column(DateTime, nullable=True)
+    is_claimed = Column(Boolean, default=False, nullable=False)
+
+    character = relationship("Character", back_populates="roulette_history")
 
 
 class Transfer(Base):
