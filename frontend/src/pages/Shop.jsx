@@ -41,7 +41,7 @@ function RoulettePanel({ onWalletChange }) {
   }
 
   const pending = result || status?.unclaimed_item;
-  const pendingKind = pending ? getPlaceholderKind(pending) : "default";
+  const pendingKind = pending ? getPlaceholderKind(pending, pending.item_type === "magic_item" ? "magic" : "equipment") : "default";
   const imgOk = pending?.image_url;
 
   return (
@@ -437,7 +437,7 @@ export default function Shop() {
 function ItemCard({ item, section, onAdd }) {
   const [open, setOpen] = useState(false);
   const [imgOk, setImgOk] = useState(!!item.image_url);
-  const kind = getPlaceholderKind(item);
+  const kind = getPlaceholderKind(item, section);
 
   return (
     <>

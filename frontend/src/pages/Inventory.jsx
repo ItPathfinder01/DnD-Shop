@@ -163,7 +163,7 @@ export default function Inventory() {
 // ── Inventory card (shop items) ───────────────────────────────────────────────
 function InvCard({ item, onClick, onRemove, onTransfer }) {
   const [imgOk, setImgOk] = useState(!!item.image_url);
-  const kind = getPlaceholderKind(item);
+  const kind = getPlaceholderKind(item, item.item_type === "magic_item" ? "magic" : "equipment");
 
   return (
     <div className="shop-item-card inv-card" onClick={onClick}>
@@ -209,7 +209,7 @@ function CustomRow({ item, onRemove, onTransfer }) {
 // ── Detail modal ──────────────────────────────────────────────────────────────
 function DetailModal({ item, onClose, onTransfer, onRemove }) {
   const [imgOk, setImgOk] = useState(!!item.image_url);
-  const kind = getPlaceholderKind(item);
+  const kind = getPlaceholderKind(item, item.item_type === "magic_item" ? "magic" : "equipment");
 
   return (
     <div className="modal-overlay" onClick={onClose}>
