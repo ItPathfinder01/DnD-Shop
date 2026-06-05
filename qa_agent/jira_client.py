@@ -1,7 +1,13 @@
 import base64
+import logging
+
 import httpx
 
 from config import JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
+
+logger = logging.getLogger(__name__)
+
+_COMMENT_MAX_CHARS = 30_000
 
 
 def _auth_header() -> str:
@@ -59,7 +65,41 @@ def _extract_adf_text(node: dict) -> str:
     return separator.join(parts)
 
 
-def post_comment(issue_key: str, body: str) -> dict:
+def _split_body(body: str) -> list[str]:
+    """Split body into chunks ≤ _COMMENT_MAX_CHARS, breaking on paragraph then line boundaries."""
+    if len(body) <= _COMMENT_MAX_CHARS:
+        return [body]
+
+    chunks: list[str] = []
+    current = ""
+
+    for section in body.split("\n\n"):
+        # Section itself exceeds limit — split further on single newlines
+        if len(section) > _COMMENT_MAX_CHARS:
+            for line in section.split("\n"):
+                if len(line) > _COMMENT_MAX_CHARS:
+                    line = line[: _COMMENT_MAX_CHARS - 11] + "[truncated]"
+                candidate = f"{current}\n{line}" if current else line
+                if len(candidate) > _COMMENT_MAX_CHARS:
+                    chunks.append(current)
+                    current = line
+                else:
+                    current = candidate
+        else:
+            candidate = f"{current}\n\n{section}" if current else section
+            if len(candidate) > _COMMENT_MAX_CHARS:
+                chunks.append(current)
+                current = section
+            else:
+                current = candidate
+
+    if current:
+        chunks.append(current)
+
+    return chunks
+
+
+def _post_single_comment(issue_key: str, body: str) -> dict:
     url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
     payload = {
         "body": {
@@ -76,3 +116,23 @@ def post_comment(issue_key: str, body: str) -> dict:
     response = httpx.post(url, headers=_headers(), json=payload, timeout=10)
     response.raise_for_status()
     return response.json()
+
+
+def post_comment(issue_key: str, body: str) -> None:
+    chunks = _split_body(body)
+    total = len(chunks)
+
+    if total > 1:
+        logger.info("Comment for %s split into %d parts (%d chars total)", issue_key, total, len(body))
+
+    for i, chunk in enumerate(chunks, start=1):
+        text = chunk if i == 1 else f"(continued {i}/{total})\n\n{chunk}"
+        try:
+            _post_single_comment(issue_key, text)
+            if total > 1:
+                logger.info("Posted part %d/%d to %s", i, total, issue_key)
+        except Exception as exc:
+            if i == 1:
+                raise
+            # Subsequent chunks: log and continue so earlier chunks aren't lost
+            logger.error("Failed to post part %d/%d to %s: %s", i, total, issue_key, exc)
