@@ -22,3 +22,7 @@ backend/uploads/
 
 # OS
 .DS_Store
+
+# Allure
+allure-results/
+allure-report/
