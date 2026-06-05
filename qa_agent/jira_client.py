@@ -118,6 +118,14 @@ def _post_single_comment(issue_key: str, body: str) -> dict:
     return response.json()
 
 
+def post_comment_adf(issue_key: str, adf_body: dict) -> None:
+    """Post a pre-built ADF document as a Jira comment (no splitting — ADF analysis comments are always short)."""
+    url = f"{JIRA_BASE_URL}/rest/api/3/issue/{issue_key}/comment"
+    payload = {"body": adf_body}
+    response = httpx.post(url, headers=_headers(), json=payload, timeout=10)
+    response.raise_for_status()
+
+
 def post_comment(issue_key: str, body: str) -> None:
     chunks = _split_body(body)
     total = len(chunks)

@@ -4,7 +4,7 @@ import time
 from typing import List
 
 from claude_client import generate_test_cases
-from jira_client import get_issue_text, post_comment
+from jira_client import get_issue_text, post_comment, post_comment_adf
 
 logger = logging.getLogger(__name__)
 
@@ -88,10 +88,72 @@ def _analyze_issue(
             logger.info("Redacted %d sensitive items from diff for %s", redaction_count, issue_key)
 
     result = analyze_diff_vs_requirements(issue_key, issue_text, diff, truncated)
-    comment = _format_analysis_comment(issue_key, result, truncated)
-    post_comment(issue_key, comment)
+
+    try:
+        adf = _build_analysis_adf(issue_key, result, truncated)
+        post_comment_adf(issue_key, adf)
+    except Exception as exc:
+        logger.warning("ADF comment failed for %s, falling back to plain text: %s", issue_key, exc)
+        post_comment(issue_key, _format_analysis_comment(issue_key, result, truncated))
+
     _analysis_posted_at[issue_key] = time.time()
     logger.info("Posted analysis to %s (verdict: %s)", issue_key, result.get("verdict"))
+
+
+_VERDICT_COLORS = {
+    "MATCH":    "#00875A",
+    "PARTIAL":  "#FF991F",
+    "MISMATCH": "#DE350B",
+    "UNCLEAR":  "#6B778C",
+}
+_AMBER = "#FF991F"
+
+
+def _text(text: str, color: str | None = None) -> dict:
+    node: dict = {"type": "text", "text": text}
+    if color:
+        node["marks"] = [{"type": "textColor", "attrs": {"color": color}}]
+    return node
+
+
+def _para(*nodes) -> dict:
+    return {"type": "paragraph", "content": list(nodes)}
+
+
+def _build_analysis_adf(issue_key: str, result: dict, truncated: bool) -> dict:
+    verdict = result.get("verdict", "UNCLEAR")
+    summary = result.get("summary", "")
+    warnings: List[str] = result.get("warnings", [])
+    color = _VERDICT_COLORS.get(verdict, _VERDICT_COLORS["UNCLEAR"])
+
+    content = [
+        _para(_text(f"🔍 Commit Analysis — {issue_key}")),
+        _para(_text(" ")),
+        _para(_text("Verdict: "), _text(verdict, color)),
+        _para(_text(" ")),
+        _para(_text(f"Summary: {summary}")),
+    ]
+
+    if truncated:
+        content += [
+            _para(_text(" ")),
+            _para(_text("⚠️ Diff truncated, partial analysis only", _AMBER)),
+        ]
+
+    if warnings:
+        content += [_para(_text(" ")), _para(_text("Warnings:"))]
+        for w in warnings:
+            content.append(_para(_text(f"⚠️ {w}", _AMBER)))
+
+    content += [
+        _para(_text(" ")),
+        _para(_text(
+            "Note: This is an advisory analysis. Multiple tasks may be deployed "
+            "together and not all requirements may be addressed in a single commit."
+        )),
+    ]
+
+    return {"type": "doc", "version": 1, "content": content}
 
 
 def _format_analysis_comment(issue_key: str, result: dict, truncated: bool) -> str:

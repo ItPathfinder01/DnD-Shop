@@ -9,6 +9,10 @@ from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 from config import GITHUB_WEBHOOK_SECRET
 from main import handle_push_event
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s — %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="QA Agent Webhook")
