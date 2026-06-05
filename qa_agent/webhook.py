@@ -2,9 +2,9 @@ import hashlib
 import hmac
 import json
 import logging
-
-from fastapi import FastAPI, Request, HTTPException, Header
 from typing import Optional
+
+from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 
 from config import GITHUB_WEBHOOK_SECRET
 from main import handle_push_event
@@ -29,6 +29,7 @@ def _verify_signature(payload: bytes, signature: Optional[str]) -> None:
 @app.post("/webhook/github")
 async def github_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     x_github_event: Optional[str] = Header(None),
     x_hub_signature_256: Optional[str] = Header(None),
 ):
@@ -39,11 +40,13 @@ async def github_webhook(
         return {"detail": "ignored"}
 
     data = json.loads(payload)
-    commits = data.get("commits", [])
+    commits: list[dict] = data.get("commits", [])
+    repo_full_name: str = data.get("repository", {}).get("full_name", "")
     messages = [c.get("message", "") for c in commits]
 
-    logger.info("Received push with %d commits", len(commits))
-    handle_push_event(messages)
+    logger.info("Received push with %d commits (repo: %s)", len(commits), repo_full_name)
+
+    background_tasks.add_task(handle_push_event, messages, commits, repo_full_name)
 
     return {"detail": "ok"}
 
